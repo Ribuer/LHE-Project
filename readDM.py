@@ -1,12 +1,10 @@
-from LHEevent import *
-from LHEfile import *
+from LHEevent import LHEEvent
+from LHEfile import LHEFile
 from array import array
+from plotTools import transverse_momentum
 
 import sys
-import plotTools
-import numpy as n
 import ROOT as rt
-import math
 
 if __name__ == '__main__':
 
@@ -17,43 +15,46 @@ if __name__ == '__main__':
     events_read_in = my_lhe_file.read_events()
 
     t = rt.TTree( 'events', 'tree with events from LHE file' )
-    n_part =  array('i',[50])
+    n_part =  array('i', [50])
 
-    np = 0
-    ident = array('f',n_part[0]*[0])
-    id_nP = ident[np]
-
+    ident = array('f', [0])
+    e = array('f', [0])
+    px = array('f', [0])
+    py = array('f', [0])
+    pz = array('f', [0])
+    pt = array('f', [0])    
 
     t.Branch("nPart", n_part, "nPart/I")
-    t.Branch("ID", ident, "IDnp/F")
-#    t.Branch("E",E,"E[n_part]/F")
-#    t.Branch("Px",Px,"Px[n_part]/F")
-#    t.Branch("Py",Py,"Py[n_part]/F")
-#    t.Branch("Pz",Pz,"Pz[n_part]/F")
+    t.Branch("ID", ident, "ID/F")
+    t.Branch("Px", px, "Px/F")
+    t.Branch("Py", py, "Py/F")
+    t.Branch("Pz", pz, "Pz/F")
+    t.Branch("E", e, "E/F")
+    t.Branch("Pt", pt, "Pt/F")
 
 #    tree.Branch( 'staff', staff, '' )
+	
     
     for one_event in events_read_in:
+	
 
         my_lhe_event = LHEEvent()
         my_lhe_event.fill_event(one_event)
         w = my_lhe_event.weights
-        n_part[0] = int(len(my_lhe_event.particles))
-        np = int(len(my_lhe_event.particles))
-
-	print n_part
+	n_part[0] = int(len(my_lhe_event.particles))
 	
         for i,p  in enumerate(my_lhe_event.particles):
-            ident[i] = p['ID']
+	    if isinstance(p, dict):	#Sorting out unnecessary data
+		ident[0] = p['ID']
+		e[0] = p['E']   
+		px[0] = p['Px']
+		py[0] = p['Py']
+		pz[0] = p['Pz']
+		pt[0] = transverse_momentum(p)
+		
+		t.Fill()
+	
 
-        print ident
-
-        t.Fill()
-
-
-            
-
-        #del one_event, my_lhe_event
-
+    t.Scan()
     fout =  rt.TFile(sys.argv[2],"RECREATE") 
     t.Write()

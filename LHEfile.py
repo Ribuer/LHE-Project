@@ -18,7 +18,7 @@ class LHEFile(object):
             lines = x_file.readlines()
         
         print 'Found %i lines in %s' %(len(lines),self.filename)      
-                                                            
+
         for line in lines:                                                                                                            
             if line[0] == '#': continue      
                                                                                           
@@ -32,7 +32,7 @@ class LHEFile(object):
 
                 if len(self.event_list) >= self.max and self.max > 0: break
             
-            if line.find("<event>") != -1:
+            if line.find("<event") != -1:
                 new_event = True
                 one_event.append(line)
                 
