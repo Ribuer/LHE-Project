@@ -1,4 +1,4 @@
-The code doesn't do much yet, but read in the DM LHE file with weights (no plots yet, no propper tree written out)
+Data(~.lhe), code to read data into root branches(readDM.py, LHEevent.py, LHEfile.py, plotTools.py) and draw them(Draw_E_Pt.py) to PDFs.
 
-to run:
-python readDM.py LHEFILE.lhe OUPUT.root
+Read data: python readDm.py ~.lhe OUTPUT.root
+Draw Root Tree to Energy/Pt PDFs: python Draw_E_Pt.py OUTPUT.root
