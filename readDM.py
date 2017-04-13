@@ -54,7 +54,5 @@ if __name__ == '__main__':
 		
 		t.Fill()
 	
-
-    t.Scan()
     fout =  rt.TFile(sys.argv[2],"RECREATE") 
     t.Write()
