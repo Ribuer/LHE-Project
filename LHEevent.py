@@ -34,9 +34,11 @@ class LHEEvent(object):
         if len(data_in_good) > 10:
 	    if len(data_in_good[0])>5:	#Checking elements ID
 		return
+		#data_in_good[0] = float(data_in_good[0][:-4])*10**int(data_in_good[0][-3:])
 
 	    if len(data_in_good[2])>5:
 		return
+		#data_in_good[2] = float(data_in_good[2][:-4])*10**int(data_in_good[2][-3:])
 
             return {'ID': int(data_in_good[0]),
                     'mIdx': int(data_in_good[2])-1,

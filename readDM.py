@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     events_read_in = my_lhe_file.read_events()
 
-    t = rt.TTree( 'events', 'tree with events from LHE file' )
+    t = rt.TTree('events', 'tree with events from LHE file' )
     n_part =  array('i', [50])
 
     ident = array('f', [0])
@@ -31,8 +31,6 @@ if __name__ == '__main__':
     t.Branch("Pz", pz, "Pz/F")
     t.Branch("E", e, "E/F")
     t.Branch("Pt", pt, "Pt/F")
-
-#    tree.Branch( 'staff', staff, '' )
 	
     
     for one_event in events_read_in:
@@ -54,5 +52,6 @@ if __name__ == '__main__':
 		
 		t.Fill()
 	
+
     fout =  rt.TFile(sys.argv[2],"RECREATE") 
     t.Write()
