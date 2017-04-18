@@ -1,4 +1,4 @@
 Data(~.lhe), code to read data into root branches(readDM.py, LHEevent.py, LHEfile.py, plotTools.py) and draw them(Draw_E_Pt.py) to PDFs.
 
 Read data: python readDm.py ~.lhe OUTPUT.root
-Draw Root Tree to Energy/Pt PDFs: python Draw_E_Pt.py OUTPUT.root
+Draw Multiple Root Tree to Energy/Pt PDFs: python Draw_E_Pt.py OUTPUT_n1.root OUTPUT_n2.root etc
