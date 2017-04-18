@@ -15,6 +15,23 @@ if __name__ == '__main__':
     events_read_in = my_lhe_file.read_events()
 
     t = rt.TTree('events', 'tree with events from LHE file' )
+    f = rt.TTree('information', 'tree with information about MChi, MPhi, gdm, gq')
+
+    
+    file_name = str(sys.argv[1])
+    m_phi = array('f', [float(file_name[file_name.find("Mchi")+5:].split("_")[0])])	#MPhi and MChi are swapped due to simulation data
+    m_chi = array('f', [float(file_name[file_name.find("Mphi")+5:].split("_")[0])])
+    g_dm = array('f', [float(file_name[file_name.find("gdm")+3:].split("_")[0])])
+    g_q = array('f', [float((file_name[file_name.find("gq")+2:].split("_")[0]).replace("p", "."))])
+
+    f.Branch("MChi", m_chi, "MChi/F")
+    f.Branch("MPhi", m_phi, "MPhi/F")
+    f.Branch("Gdm", g_dm, "Gdm/F")
+    f.Branch("Gq", g_q, "Gq/F")
+    
+    f.Fill()
+
+
     n_part =  array('i', [50])
 
     ident = array('f', [0])
@@ -55,3 +72,4 @@ if __name__ == '__main__':
 
     fout =  rt.TFile(sys.argv[2],"RECREATE") 
     t.Write()
+    f.Write()

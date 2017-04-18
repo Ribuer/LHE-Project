@@ -3,33 +3,44 @@ import sys
 import string
 
 alphabet = [0]*(len(sys.argv)-1)
-color_list = [600, 632, 416, 880, 432, 800, 400]
-str_list = ["dm","med", "top", "bot"]
+color_list = [634, 418, 882, 434, 618, 402, 602, 628, 412, 876, 428, 612, 396, 596]
+part_list = ["dm","med", "top", "bot"]
+plot_list = ["e", "pt"]
 
 hist_dict = {}
+info_dict = {}
 
 def scale_hist(hist_name):
 	scale = hist_name.Integral()
 	hist_name.Scale(100./scale)
 
-def draw_print_hists(dictionary):
-	for k in str_list:
+def draw_print_hists(dictionary, info):
+	for k in part_list:
 		for i in range(1,len(dictionary)/8+1):	
-			scale_hist(dictionary[str(i)+"_"+k+"_e"])
-			scale_hist(dictionary[str(i)+"_"+k+"_pt"])
+			for m in plot_list:
+				scale_hist(dictionary[str(i)+"_"+k+"_"+m])
 
-		for l in ["e", "pt"]:
+		leg_size = (len(dictionary)/8)*.1
+		if (len(dictionary)/8) > 7:
+			leg_size = .7
+		for l in plot_list:
 			c1 = TCanvas("canvas1", "Histplots", 800, 600)
-			legend = TLegend(.7, .7, 0.85, 0.85)
+			if l == "e": 
+				legend = TLegend(.6, .85-leg_size, 0.85, 0.88)
+			if l == "pt":
+				legend = TLegend(.2, .85-leg_size, 0.45, 0.88)
 
 			for i in range(1,len(dictionary)/8+1):	
 				if i == 1:
-					dictionary[str(i)+"_"+k+"_"+l].Draw()
+					dictionary[str(i)+"_"+k+"_"+l].Draw("")
 				else: 
 					dictionary[str(i)+"_"+k+"_"+l].Draw("same")
 				
-				legend.AddEntry(dictionary[str(i)+"_"+k+"_"+l], "File "+str(i), "l")				
+				legend.AddEntry(dictionary[str(i)+"_"+k+"_"+l], "#splitline{Chi: "+info[str(i)+"_m_chi"]+" Phi: "+info[str(i)+"_m_phi"]+"}{GDM: "+info[str(i)+"_g_dm"]+" GQ: "+info[str(i)+"_g_q"]+"}", "l")		
+				legend.SetTextSize(0.03)
+
 			legend.Draw()
+			c1.SetLogy()	#Set y scale to log
 			c1.Print(k.upper()+" "+l.upper()+" Normed.pdf")
 			c1.Close()
 			del legend	
@@ -80,30 +91,39 @@ def make_hists(counter):
 		bot_e_hist.Fill(events.E)
 		bot_pt_hist.Fill(events.Pt)
 
-	return dm_e_hist, dm_pt_hist, med_e_hist, med_pt_hist, top_e_hist, top_pt_hist, bot_e_hist, bot_pt_hist
+	lEntries = information.GetEntries()
+
+	for i in range(0,nEntries):
+		entry = information.GetEntry(i)
+
+		m_chi = str(int(information.MChi))
+		m_phi = str(int(information.MPhi))
+		g_dm = str(int(information.Gdm))
+		g_q = str(information.Gq)
+
+	return dm_e_hist, dm_pt_hist, med_e_hist, med_pt_hist, top_e_hist, top_pt_hist, bot_e_hist, bot_pt_hist, m_chi, m_phi, g_dm, g_q
 
 
 def set_color(hist_dictionary, arg_length):
 	for i in range(1, arg_length):
-		for k in str_list:
+		for k in part_list:
 			hist_dict[str(i)+"_"+k+"_e"].SetLineColor(color_list[i-1])
 			hist_dict[str(i)+"_"+k+"_pt"].SetLineColor(color_list[i-1])
-		
+			
 
 
 if len(sys.argv)-1 > len(color_list):
 	sys.exit("Please use less than "+str(len(color_list)+" files. Too little colors assigned(-> Color_list)"))
 
+
 for count in range(1,len(sys.argv)):
 	alphabet[count-1] = TFile(sys.argv[count]) 
 	gStyle.SetOptStat(0)	#hide statbox
 	
-	hist_dict[str(count)+'_dm_e'], hist_dict[str(count)+'_dm_pt'], hist_dict[str(count)+'_med_e'], hist_dict[str(count)+'_med_pt'], hist_dict[str(count)+'_top_e'], hist_dict[str(count)+'_top_pt'], hist_dict[str(count)+'_bot_e'], hist_dict[str(count)+'_bot_pt'] = make_hists(count)
+	hist_dict[str(count)+'_dm_e'], hist_dict[str(count)+'_dm_pt'], hist_dict[str(count)+'_med_e'], hist_dict[str(count)+'_med_pt'], hist_dict[str(count)+'_top_e'], hist_dict[str(count)+'_top_pt'], hist_dict[str(count)+'_bot_e'], hist_dict[str(count)+'_bot_pt'], info_dict[str(count)+'_m_chi'], info_dict[str(count)+'_m_phi'], info_dict[str(count)+'_g_dm'], info_dict[str(count)+'_g_q'] = make_hists(count)
 
 	del events
+	del information
 	
 set_color(hist_dict, len(sys.argv))
-draw_print_hists(hist_dict)
-
-
-
+draw_print_hists(hist_dict, info_dict)
