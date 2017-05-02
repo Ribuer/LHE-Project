@@ -31,44 +31,60 @@ if __name__ == '__main__':
     
     f.Fill()
 
+    nPart =  array('i', [50])
 
-    n_part =  array('i', [50])
+    PdgID = array('i',nPart[0]*[0])
+    mIdx = array('i',nPart[0]*[0])
+    E = array('f',nPart[0]*[0])
+    Px = array('f',nPart[0]*[0])
+    Py = array('f',nPart[0]*[0])
+    Pz = array('f',nPart[0]*[0])
+    Pt = array('f',nPart[0]*[0])
+    M = array('f',nPart[0]*[0])
+    Eta = array('f',nPart[0]*[0])
+    Phi = array('f',nPart[0]*[0])
 
-    ident = array('f', [0])
-    e = array('f', [0])
-    px = array('f', [0])
-    py = array('f', [0])
-    pz = array('f', [0])
-    pt = array('f', [0])    
+    t.Branch("nPart",nPart,"nPart/I")
+    t.Branch("PdgID",PdgID,"PdgID[nPart]/I")
+    t.Branch("mIdx",mIdx,"mIdx[nPart]/I")
+    t.Branch("E",E,"E[nPart]/F")
+    t.Branch("Px",Px,"Px[nPart]/F")
+    t.Branch("Py",Py,"Py[nPart]/F")
+    t.Branch("Pz",Pz,"Pz[nPart]/F")
+    t.Branch("Pt",Pt,"Pt[nPart]/F")
+    t.Branch("M",Pt,"M[nPart]/F")
+    t.Branch("Eta",Eta,"Eta[nPart]/F")
+    t.Branch("Phi",Phi,"Phi[nPart]/F")
 
-    t.Branch("nPart", n_part, "nPart/I")
-    t.Branch("ID", ident, "ID/F")
-    t.Branch("Px", px, "Px/F")
-    t.Branch("Py", py, "Py/F")
-    t.Branch("Pz", pz, "Pz/F")
-    t.Branch("E", e, "E/F")
-    t.Branch("Pt", pt, "Pt/F")
-	
+    vect = rt.TLorentzVector(0,0,0,0)
     
     for one_event in events_read_in:
-	
-
         my_lhe_event = LHEEvent()
         my_lhe_event.fill_event(one_event)
         w = my_lhe_event.weights
-	n_part[0] = int(len(my_lhe_event.particles))
+	nPart[0] = int(len(my_lhe_event.particles))
 	
         for i,p  in enumerate(my_lhe_event.particles):
 	    if isinstance(p, dict):	#Sorting out unnecessary data
-		ident[0] = p['ID']
-		e[0] = p['E']   
-		px[0] = p['Px']
-		py[0] = p['Py']
-		pz[0] = p['Pz']
-		pt[0] = transverse_momentum(p)
-		
-		t.Fill()
-	
+		    PdgID[i] = p['PdgID']
+		    mIdx[i] = p['mIdx']
+		    E[i] = p['E']
+		    Px[i] = p['Px']
+		    Py[i] = p['Py']
+		    Pz[i] = p['Pz']
+
+		    vect.SetPxPyPzE(Px[i],Py[i],Pz[i],E[i])
+
+		    Pt[i] = vect.Pt()
+		    M[i] = vect.M()	 
+		    Eta[i] = -999
+		    Phi[i] = -999
+
+		    if vect.Pt() > 0:
+		        Eta[i] = vect.Eta()
+		        Phi[i] = vect.Phi()
+                
+        t.Fill()
 
     fout =  rt.TFile(sys.argv[2],"RECREATE") 
     t.Write()

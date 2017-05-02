@@ -1,5 +1,4 @@
 import ROOT as rt
-import math
 
 def invariant_mass_sq(p1, p2):
     v1 = rt.TLorentzVector(p1['Px'], p1['Py'], p1['Pz'], p1['E'])
@@ -12,4 +11,4 @@ def transverse_momentum(p1):
     if v1.X() == 0 and v1.Y() == 0:
 	return 0
 
-    return v1.P()*math.sin(v1.Eta())
+    return v1.Pt()

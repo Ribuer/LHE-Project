@@ -17,7 +17,6 @@ class LHEEvent(object):
         # read the model
         for i in range(2,len(lhe_lines)-3):
             if "wgt" in lhe_lines[i]:
-                
 		self.weights.append(self.read_weights(lhe_lines[i]))
             else:
                 self.particles.append(self.read_particle(lhe_lines[i]))
@@ -40,7 +39,7 @@ class LHEEvent(object):
 		return
 		#data_in_good[2] = float(data_in_good[2][:-4])*10**int(data_in_good[2][-3:])
 
-            return {'ID': int(data_in_good[0]),
+            return {'PdgID': int(data_in_good[0]),
                     'mIdx': int(data_in_good[2])-1,
                     'Px' : float(data_in_good[6]),
                     'Py' : float(data_in_good[7]),
