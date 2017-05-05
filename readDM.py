@@ -18,11 +18,20 @@ if __name__ == '__main__':
     f = rt.TTree('information', 'tree with information about MChi, MPhi, gdm, gq')
 
     
-    file_name = str(sys.argv[1])
-    m_phi = array('f', [float(file_name[file_name.find("Mchi")+5:].split("_")[0])])	#MPhi and MChi are swapped due to simulation data
-    m_chi = array('f', [float(file_name[file_name.find("Mphi")+5:].split("_")[0])])
-    g_dm = array('f', [float(file_name[file_name.find("gdm")+3:].split("_")[0])])
-    g_q = array('f', [float((file_name[file_name.find("gq")+2:].split("_")[0]).replace("p", "."))])
+    file_name = str(sys.argv[1]).lower()
+    m_phi = array('f', [float(file_name[file_name.find("mphi")+4:].split("_")[0])])	#MPhi and MChi are swapped due to simulation data
+    m_chi = array('f', [float(file_name[file_name.find("mchi")+4:].split("_")[0])])
+    try:
+	g_dm = array('f', [float(file_name[file_name.find("gdm")+3:].split("_")[0])])
+    except ValueError:
+	g_dm = array('f', [0])
+
+    try:
+	g_q = array('f', [float((file_name[file_name.find("gq")+2:].split(".")[0]).replace("p", "."))])
+    except ValueError:
+	g_q = array('f', [0])
+
+    print m_chi, m_phi, g_dm
 
     f.Branch("MChi", m_chi, "MChi/F")
     f.Branch("MPhi", m_phi, "MPhi/F")

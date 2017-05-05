@@ -29,15 +29,13 @@ class LHEEvent(object):
         for entry in data_in:
             if entry != "": data_in_good.append(entry)
 	
-	
         if len(data_in_good) > 10:
-	    if len(data_in_good[0])>5:	#Checking elements ID
-		return
-		#data_in_good[0] = float(data_in_good[0][:-4])*10**int(data_in_good[0][-3:])
+	    if len(data_in_good[0])>5 and int(data_in_good[0]) != 9100000:
+		if abs(int(data_in_good[0])) != 9100022:	#Checking elements ID
+			return
 
 	    if len(data_in_good[2])>5:
 		return
-		#data_in_good[2] = float(data_in_good[2][:-4])*10**int(data_in_good[2][-3:])
 
             return {'PdgID': int(data_in_good[0]),
                     'mIdx': int(data_in_good[2])-1,

@@ -1,0 +1,16 @@
+24.4.17:
+- Tree array entries - Check
+- Merge legend/hists(Hadd)
+- Make accounts - Check
+- GQ Ratios in plots - Partially Check
+
+01.5.17:
+Problems:
+- Binning
+- merge lists automatically
+
+
+05.5.17:
+Difference vector/axial-vector
+Scalar/Pseudoscalar
+Width of scalar

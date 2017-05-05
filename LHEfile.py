@@ -35,7 +35,7 @@ class LHEFile(object):
             if line.find("<event") != -1:
                 new_event = True
                 one_event.append(line)
-                
+
         return self.event_list
 
     
