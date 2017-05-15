@@ -24,14 +24,14 @@ if __name__ == '__main__':
     try:
 	g_dm = array('f', [float(file_name[file_name.find("gdm")+3:].split("_")[0])])
     except ValueError:
-	g_dm = array('f', [0])
+	check = file_name[-12:]	#Excluding the naming at the beginning of the file
+	g_dm = array('f', [float((check[check.find("g")+1:].split(".")[0]).replace("p", "."))])
+	g_q = array('f', [float((check[check.find("g")+1:].split(".")[0]).replace("p", "."))])
 
     try:
 	g_q = array('f', [float((file_name[file_name.find("gq")+2:].split(".")[0]).replace("p", "."))])
     except ValueError:
-	g_q = array('f', [0])
-
-    print m_chi, m_phi, g_dm
+	pass
 
     f.Branch("MChi", m_chi, "MChi/F")
     f.Branch("MPhi", m_phi, "MPhi/F")
