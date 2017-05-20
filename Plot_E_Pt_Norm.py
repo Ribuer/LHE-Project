@@ -7,22 +7,26 @@ from ROOT import *
 import sys
 import string
 
+save_file_as = ".png"
 
-TH1.StatOverflows(True)	#Doesnt overflow
 
 alphabet = [0]*(len(sys.argv)-1)	#Storage for opening files
 color_list = [633, 434, 419, 877, 618, 402, 602, 628, 414, 882, 428, 612, 396, 596]
 var_list = ["E", "Pt"]
-part_num_list = [9100022, 9100000, 6, 5]
-part_list = ["DM", "Med", "Top", "Bot"]		#Naming pdfs
-part_xtitle_list = ["Dark Matter", "Mediator", "Top Quark", "Bottom Quark"]	#Naming x axis
-canv_list = [0]*8	#Storage of canvases
-leg_list = [0]*8	#Storage of legends
-hist_list = [0]*8	#Storage of histograms to be compared with
+part_num_list = [9100022, 9100000, 6, 5, 10000]		#Last entrance in the following 3 lists is for DM1+DM2 comparing reasons and has a single own plot
+part_list = ["DM", "Med", "Top", "Bot", "DM_Comp"]	#Naming pdfs
+part_xtitle_list = ["Dark Matter", "Mediator", "Top Quark", "Bottom Quark", "Dark Matter 1+2"]	#Naming x axis
+
+test = ((2*len(part_list))-1)
+
+canv_list = [0]*test	#Storage of canvases
+leg_list = [0]*test	#Storage of legends
+hist_list = [0]*test	#Storage of histograms to be compared with
 normed_list = [] 	#Storage of normed histograms
-top_pad_list = [0]*8	#Storage of upper pads
-bot_pad_list = [0]*8	#Storage of lower pads
-line_list = [0]*8	#Storage of line at y = 1 in lower pad
+top_pad_list = [0]*test	#Storage of upper pads
+bot_pad_list = [0]*test	#Storage of lower pads
+line_list = [0]*test	#Storage of line at y = 1 in lower pad
+
 info_list = []
 
 leg_size = (len(sys.argv)-1)*.06
@@ -49,6 +53,21 @@ def make_plot(counter, num, tree, information):
 	else:
 		varia = var_list[1]
 
+	if num == len(canv_list)-1:		#Choosing DM1+DM2 Plot
+		set_row = "mIdx=="
+		varia = var_list[1]
+	else: 
+		set_row = "PdgID=="
+	
+	if varia == var_list[0]:		#Set which set to take for histogram(e or pt)
+		max_bin = bin_e
+		x_min = x_e_min
+		x_max = x_e_max
+	else:	
+		max_bin = bin_pt
+		x_min = x_pt_min
+		x_max = x_pt_max
+
 	part = part_num_list[num/2]
 
 	hist_name = "histo_"+str(num)+"_"+str(counter-1)  #canvas-nr_file-nr
@@ -58,8 +77,8 @@ def make_plot(counter, num, tree, information):
 		leg_list[num].SetTextSize(0.04)
 		
 		tree.SetLineWidth(3)		
-		tree.Draw(varia+">>"+hist_name+"("+str(bin_e)+","+str(x_e_min)+","+str(x_e_max)+")", "PdgID=="+str(part), "Enorm")	
-		tree.Draw(varia, "PdgID=="+str(part), "normsame")
+
+		tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(x_min)+","+str(x_max)+")", set_row+str(part), "Enorm")	
 		gPad.SetLogy()
 
 		htemp1 = gPad.GetPrimitive(hist_name)	
@@ -72,6 +91,11 @@ def make_plot(counter, num, tree, information):
 		htemp1.GetYaxis().SetTitleSize(set_size)
 		htemp1.GetYaxis().SetTitleOffset(1.3)
 
+		htemp1.SetBinContent(max_bin, htemp1.GetBinContent(max_bin+1)+htemp1.GetBinContent(max_bin)) #Scale and set different bin ranges(e, pt)
+		htemp1.SetBinError(max_bin, htemp1.GetBinError(max_bin+1)+htemp1.GetBinError(max_bin))
+		htemp1.Scale(1./htemp1.Integral())
+
+		htemp1.Draw("histnormsame")
 		hist_list[num] = gDirectory.Get(hist_name)
 		gPad.Update()
 		del htemp1
@@ -79,9 +103,17 @@ def make_plot(counter, num, tree, information):
 	else:	
 		tree.SetLineWidth(2)
 		tree.SetLineStyle(2)
-		tree.Draw(varia+">>"+hist_name, "PdgID=="+str(part), "Enormsame")
-		tree.Draw(varia, "PdgID=="+str(part), "normsame")
+
+		tree.Draw(varia+">>"+hist_name, set_row+str(part), "Enormsame")
 		htemp2 = gPad.GetPrimitive(hist_name)
+		htemp2.SetBinContent(max_bin,  htemp2.GetBinContent(max_bin+1)+htemp2.GetBinContent(max_bin))
+		htemp2.SetBinError(max_bin,  htemp2.GetBinError(max_bin+1)+htemp2.GetBinError(max_bin))
+		htemp2.Draw("histnormsame")
+
+		try:		#Checking if there is data. To avoid ZeroDivisionError
+			htemp2.Scale(1./htemp2.Integral())
+		except ZeroDivisionError:
+			print "Could not Scale "+sys.argv[counter]+" for "+part_xtitle_list[num/2]+" "+varia+" because there is no data."
 
 		bot_pad_list[num].cd()
 		normed_list.append(htemp2.Clone())
@@ -90,7 +122,6 @@ def make_plot(counter, num, tree, information):
 
 		if counter == 2:			
 			normed_list[num].Draw()
-					
 			normed_list[num].Draw("histsame")
 			normed_list[num].GetYaxis().SetRangeUser(.5, 1.5)
 			if num % 2 == 0:
@@ -112,12 +143,12 @@ def make_plot(counter, num, tree, information):
 			normed_list[num].GetXaxis().SetTitleOffset(4)		#Offset X title to bottom(not covered by label anymore)
 			normed_list[num].GetYaxis().SetTitleOffset(1.3)		#Offset Y title to left
 			normed_list[num].GetYaxis().SetLabelOffset(.01)
-			gPad.SetBottomMargin(0.3)				#Set Margin for y title
+			gPad.SetBottomMargin(0.3)				#Set Margin for y title	
 				
 		else:
-			normed_list[(counter-2)*8+num].Draw("same")						
-			normed_list[(counter-2)*8+num].Draw("histsame")
-		
+			normed_list[(counter-2)*test+num].Draw("same")						
+			normed_list[(counter-2)*test+num].Draw("histsame")
+
 		if counter == len(sys.argv)-1:
 			if num % 2 == 0:
 				line_list[num] = TLine(x_e_min, 1, x_e_max, 1)
@@ -144,11 +175,11 @@ def make_plot(counter, num, tree, information):
 	if counter == len(sys.argv)-1:
 		leg_list[num].SetBorderSize(0)
 		leg_list[num].Draw()
-		if num == 7:
+		if num == len(canv_list)-1:
 			info_list.append(m_chi)
 			info_list.append(m_phi)
 			info_list.append(g_dm)
-			info_list.append(g_q)			
+			info_list.append(g_q)	
 
 low_pad_up_tresh = .3025
 
@@ -160,10 +191,11 @@ for i in range(1, len(canv_list)+1):
 	top_pad_list[i-1].Draw()
 	bot_pad_list[i-1] = TPad("lowerPad"+str(i), "Test", .005, .005, .995, low_pad_up_tresh)
 	bot_pad_list[i-1].Draw()
-	
 
 gStyle.SetOptStat(0)	#hide statbox
 gStyle.SetOptTitle(0)
+#gStyle.SetOptStat(111111)
+#gStyle.SetOptStat("o")
 
 for count in range(1,len(sys.argv)):
 	alphabet[count-1] = TFile(sys.argv[count]) 
@@ -172,17 +204,19 @@ for count in range(1,len(sys.argv)):
 	entry = information.GetEntry(0)
 
 	events.SetLineColor(color_list[count-1])
-
 	for i in range(0, len(canv_list)):
 		make_plot(count, i, events, information)
 	del events
 	del information
 
 """Printing all the different canvases to pdf"""
-for i in range(0, 8):
+for i in range(0, len(canv_list)-1):
 	part_check = i/2
 	if i % 2 == 0:
 		vari = 0
 	else:
 		vari = 1
-	canv_list[i].Print(info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed.pdf")
+
+	canv_list[i].Print(info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed"+save_file_as)
+
+canv_list[-1].Print(info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[-1]+"_Pt_Normed"+save_file_as)
