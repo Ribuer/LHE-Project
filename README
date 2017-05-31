@@ -1,6 +1,9 @@
-Data(~.lhe), code to read data into root branches(readDM.py, LHEevent.py, LHEfile.py, plotTools.py) and draw them(Draw_E_Pt.py) to PDFs.
+Data(~.lhe), code to read data into root branches(readDM.py, LHEevent.py, LHEfile.py, plotTools.py) and draw them(Plot_E_Pt_Norm.py) to PDFs.
 
-Read data: python readDm.py ~.lhe OUTPUT.root
+Read data: python readDm.py ~.lhe Optional.root
+There is no need for Optional.root anymore as the rootfile name is generated automatically, for example: DMPseudo_Mphi10_Mchi1_g0p8.lhe -> python readDM.py DMPseudo_Mphi10_Mchi1_g0p8.lhe -> Pseudo_10_1_0p8.root
+If you want to give your own name, just set Optional.root to your liking and it will use that instead of the automated one.
+
 Draw Multiple Root Tree to Energy/Pt PDFs: python Plot_E_Pt_Norm.py OUTPUT_n1.root OUTPUT_n2.root etc
 The model that you wish to compare with in the ratio plot should be used as 1st input like:
 python Plot_E_Pt_Norm.py This_is_to_be_compared_with.root n2.root n3.root etc
