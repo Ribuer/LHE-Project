@@ -6,8 +6,10 @@ Increase number of allowed plots: Add entries in color_list, Ln 12
 from ROOT import *
 import sys
 import string
+import math as mt
+from array import array
 
-save_file_as = ".png"
+save_file_as = ".pdf"
 
 
 alphabet = [0]*(len(sys.argv)-1)	#Storage for opening files
@@ -26,18 +28,32 @@ normed_list = [] 	#Storage of normed histograms
 top_pad_list = [0]*test	#Storage of upper pads
 bot_pad_list = [0]*test	#Storage of lower pads
 line_list = [0]*test	#Storage of line at y = 1 in lower pad
+bin_list_e = array('f', {0})
+bin_list_pt = array('f', {0})
 
 info_list = []
 
 leg_size = (len(sys.argv)-1)*.06
 
 x_e_min = 0
-x_e_max = 700
+x_e_max = 720
 x_pt_min = 0
-x_pt_max = 700
+x_pt_max = 720
 bin_width = 40
 bin_e = (x_e_max-x_e_min)/bin_width
 bin_pt = (x_pt_max-x_pt_min)/bin_width
+
+for i in range(1, int(bin_e)+1):		# The following lines are built to set different bin sizes later on
+	bin_list_e.append(i*bin_width)
+
+if x_e_max % bin_width != 0:
+	bin_list_e.append(x_e_max)
+
+for i in range(1, int(bin_pt)+1):
+	bin_list_pt.append(i*bin_width)
+
+if x_pt_max % bin_width != 0:
+	bin_list_pt.append(x_pt_max)
 
 set_title_font = 63
 set_label_font = set_title_font-20
@@ -53,20 +69,19 @@ def make_plot(counter, num, tree, information):
 	else:
 		varia = var_list[1]
 
-	if num == len(canv_list)-1:		#Choosing DM1+DM2 Plot
-		set_row = "mIdx=="
+	if num == len(canv_list)-1:		#Naming DM1+DM2 Plot
 		varia = var_list[1]
-	else: 
-		set_row = "PdgID=="
 	
 	if varia == var_list[0]:		#Set which set to take for histogram(e or pt)
-		max_bin = bin_e
+		max_bin = len(bin_list_e)-1	#For setting different bin sizes
 		x_min = x_e_min
 		x_max = x_e_max
+		bin_list = bin_list_e
 	else:	
-		max_bin = bin_pt
+		max_bin = len(bin_list_pt)-1
 		x_min = x_pt_min
 		x_max = x_pt_max
+		bin_list = bin_list_pt
 
 	part = part_num_list[num/2]
 
@@ -76,9 +91,10 @@ def make_plot(counter, num, tree, information):
 		leg_list[num] = TLegend(.65, .82-leg_size, .78, .85)
 		leg_list[num].SetTextSize(0.04)
 		
-		tree.SetLineWidth(3)		
+		tree.SetLineWidth(3)	
 
-		tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(x_min)+","+str(x_max)+")", set_row+str(part), "Enorm")	
+		#tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(bin_list)+")", "PdgID=="+str(part), "Enorm")	
+		tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(x_min)+","+str(x_max)+")", "PdgID=="+str(part), "Enorm")	
 		gPad.SetLogy()
 
 		htemp1 = gPad.GetPrimitive(hist_name)	
@@ -91,9 +107,13 @@ def make_plot(counter, num, tree, information):
 		htemp1.GetYaxis().SetTitleSize(set_size)
 		htemp1.GetYaxis().SetTitleOffset(1.3)
 
-		htemp1.SetBinContent(max_bin, htemp1.GetBinContent(max_bin+1)+htemp1.GetBinContent(max_bin)) #Scale and set different bin ranges(e, pt)
-		htemp1.SetBinError(max_bin, htemp1.GetBinError(max_bin+1)+htemp1.GetBinError(max_bin))
-		htemp1.Scale(1./htemp1.Integral())
+		htemp1.SetBinContent(max_bin, htemp1.GetBinContent(max_bin+1)+htemp1.GetBinContent(max_bin))
+		htemp1.SetBinError(max_bin, mt.sqrt(htemp1.GetBinError(max_bin+1)**2+htemp1.GetBinError(max_bin)**2))
+
+		try:		#Checking if there is data. To avoid ZeroDivisionError
+			htemp1.Scale(1./htemp1.Integral())
+		except ZeroDivisionError:
+			print "Could not Scale "+sys.argv[counter]+" for "+part_xtitle_list[num/2]+" "+varia+" because there is no data."
 
 		htemp1.Draw("histnormsame")
 		hist_list[num] = gDirectory.Get(hist_name)
@@ -104,10 +124,10 @@ def make_plot(counter, num, tree, information):
 		tree.SetLineWidth(2)
 		tree.SetLineStyle(2)
 
-		tree.Draw(varia+">>"+hist_name, set_row+str(part), "Enormsame")
+		tree.Draw(varia+">>"+hist_name, "PdgID=="+str(part), "Enormsame")
 		htemp2 = gPad.GetPrimitive(hist_name)
 		htemp2.SetBinContent(max_bin,  htemp2.GetBinContent(max_bin+1)+htemp2.GetBinContent(max_bin))
-		htemp2.SetBinError(max_bin,  htemp2.GetBinError(max_bin+1)+htemp2.GetBinError(max_bin))
+		htemp2.SetBinError(max_bin,  mt.sqrt(htemp2.GetBinError(max_bin+1)**2+htemp2.GetBinError(max_bin)**2))
 		htemp2.Draw("histnormsame")
 
 		try:		#Checking if there is data. To avoid ZeroDivisionError
@@ -124,10 +144,13 @@ def make_plot(counter, num, tree, information):
 			normed_list[num].Draw()
 			normed_list[num].Draw("histsame")
 			normed_list[num].GetYaxis().SetRangeUser(.5, 1.5)
-			if num % 2 == 0:
+			if num == len(canv_list)-1:
+				normed_list[num].GetXaxis().SetTitle(part_xtitle_list[num/2]+" p_{T} (GeV)")
+			elif num % 2 == 0:
 				normed_list[num].GetXaxis().SetTitle(part_xtitle_list[num/2]+" Energy (GeV)")
 			else:
-				normed_list[num].GetXaxis().SetTitle(part_xtitle_list[num/2]+" Momentum (GeV)")
+				normed_list[num].GetXaxis().SetTitle(part_xtitle_list[num/2]+" p_{T} (GeV)")
+
 			normed_list[num].GetYaxis().SetTitle("g = x / g = 1")
 
 			normed_list[num].GetXaxis().SetTitleFont(set_title_font)	#Set and make the title/label size/font equal
@@ -194,8 +217,6 @@ for i in range(1, len(canv_list)+1):
 
 gStyle.SetOptStat(0)	#hide statbox
 gStyle.SetOptTitle(0)
-#gStyle.SetOptStat(111111)
-#gStyle.SetOptStat("o")
 
 for count in range(1,len(sys.argv)):
 	alphabet[count-1] = TFile(sys.argv[count]) 
@@ -217,6 +238,6 @@ for i in range(0, len(canv_list)-1):
 	else:
 		vari = 1
 
-	canv_list[i].Print(info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed"+save_file_as)
+	canv_list[i].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed"+save_file_as)
 
-canv_list[-1].Print(info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[-1]+"_Pt_Normed"+save_file_as)
+canv_list[-1].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[-1]+"_Pt_Normed"+save_file_as)
