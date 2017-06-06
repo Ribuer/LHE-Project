@@ -9,14 +9,11 @@ import string
 import math as mt
 from array import array
 
-save_file_as = ".pdf"
-
-
 alphabet = [0]*(len(sys.argv)-1)	#Storage for opening files
-color_list = [633, 434, 419, 877, 618, 402, 602, 628, 414, 882, 428, 612, 396, 596]
+color_list = [633, 434, 402, 877, 618, 419, 602, 628, 396, 882, 428, 612, 414, 596]
 var_list = ["E", "Pt"]
 part_num_list = [9100022, 9100000, 6, 5, 10000]		#Last entrance in the following 3 lists is for DM1+DM2 comparing reasons and has a single own plot
-part_list = ["DM", "Med", "Top", "Bot", "DM_Comp"]	#Naming pdfs
+part_list = ["DM", "Med", "Top", "Bot", "Med_Comp"]	#Naming pdfs
 part_xtitle_list = ["Dark Matter", "Mediator", "Top Quark", "Bottom Quark", "Dark Matter 1+2"]	#Naming x axis
 
 test = ((2*len(part_list))-1)
@@ -33,7 +30,7 @@ bin_list_pt = array('f', {0})
 
 info_list = []
 
-leg_size = (len(sys.argv)-1)*.06
+leg_size = (len(sys.argv)-1)*.065
 
 x_e_min = 0
 x_e_max = 720
@@ -58,6 +55,34 @@ if x_pt_max % bin_width != 0:
 set_title_font = 63
 set_label_font = set_title_font-20
 set_size = 18
+
+#Checking how to make the legend(Mchi/Mdm equal or g's equal(files))
+for i in range(2,len(sys.argv)):
+	if i == len(sys.argv)-1 and sys.argv[1].split("_")[1] == sys.argv[i].split("_")[1]:	#Check if all MPhi's are equal
+		set_phi = True
+	elif sys.argv[1].split("_")[1] == sys.argv[i].split("_")[1]:
+		pass
+	else:
+		set_phi = False		
+		break
+
+for i in range(2,len(sys.argv)):	
+	if i == len(sys.argv)-1 and sys.argv[1].split("_")[2] == sys.argv[i].split("_")[2]:	#Check if all MChi's are equal
+		set_chi = True
+	elif sys.argv[1].split("_")[2] == sys.argv[i].split("_")[2]:
+		pass
+	else:
+		set_chi = False		
+		break
+
+for i in range(2,len(sys.argv)):	
+	if i == len(sys.argv)-1 and sys.argv[1].split("_")[3] == sys.argv[i].split("_")[3]:	#Check if all g's are equal
+		set_q = True
+	elif sys.argv[1].split("_")[3] == sys.argv[i].split("_")[3]:
+		pass
+	else:
+		set_q = False		
+		break
 
 if len(sys.argv)-1 > len(color_list):
 	sys.exit("Please use less than "+str(len(color_list)+" files. Too little colors assigned(-> Color_list)"))
@@ -93,7 +118,7 @@ def make_plot(counter, num, tree, information):
 		
 		tree.SetLineWidth(3)	
 
-		#tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(bin_list)+")", "PdgID=="+str(part), "Enorm")	
+		#tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(bin_list)+")", "PdgID=="+str(part), "Enorm")	#Also for automated bin setting, doesnt work at the moment
 		tree.Draw(varia+">>"+hist_name+"("+str(max_bin)+","+str(x_min)+","+str(x_max)+")", "PdgID=="+str(part), "Enorm")	
 		gPad.SetLogy()
 
@@ -182,27 +207,42 @@ def make_plot(counter, num, tree, information):
 			line_list[num].Draw("same")
 
 	top_pad_list[num].cd()
-	m_chi = " Mchi "+str(int(information.MChi))
-	m_phi = " Mdm "+str(int(information.MPhi))
+	m_chi = "Mdm "+str(int(information.MChi))
+	m_phi = "Mphi "+str(int(information.MPhi))
 	g_dm = "GDM "+str(int(information.Gdm))
 	g_q = "GQ "+str(round(information.Gq*10)/10.) #Issue with root float storage.
-	g_both = " g"+str(round(information.Gdm*10)/10.)
+	g_both = "g "+str(round(information.Gdm*10)/10.)
 
-	leg_list[num].SetHeader(" Model: #splitline{"+m_chi+" GeV}{"+m_phi+" Gev}")
-
-	if information.Gdm == information.Gq:
-		leg_list[num].AddEntry(tree, g_both, "l")
-	else: 
+	if set_phi and set_chi:
+		leg_list[num].SetHeader(" Model: #splitline{ "+m_chi+" GeV}{ "+m_phi+" Gev}")
 		leg_list[num].AddEntry(tree, g_both, "l")
 
-	if counter == len(sys.argv)-1:
-		leg_list[num].SetBorderSize(0)
-		leg_list[num].Draw()
-		if num == len(canv_list)-1:
-			info_list.append(m_chi)
-			info_list.append(m_phi)
-			info_list.append(g_dm)
-			info_list.append(g_q)	
+		if counter == len(sys.argv)-1:
+			leg_list[num].SetBorderSize(0)
+			leg_list[num].Draw()
+				
+	elif set_phi and set_q:
+		leg_list[num].SetHeader(" Model: #splitline{ "+m_phi+" GeV}{ "+g_both+"}")
+		leg_list[num].AddEntry(tree, m_chi, "l")
+
+		if counter == len(sys.argv)-1:
+			leg_list[num].SetBorderSize(0)
+			leg_list[num].Draw()
+
+	elif set_chi and set_q:
+		leg_list[num].SetHeader(" Model: #splitline{ "+m_chi+" GeV}{ "+g_both+"}")
+		leg_list[num].AddEntry(tree, m_phi, "l")
+
+		if counter == len(sys.argv)-1:
+			leg_list[num].SetBorderSize(0)
+			leg_list[num].Draw()
+
+	if num == len(canv_list)-1:
+		info_list.append(m_chi)
+		info_list.append(m_phi)
+		info_list.append(g_dm)
+		info_list.append(g_q)
+
 
 low_pad_up_tresh = .3025
 
@@ -238,6 +278,8 @@ for i in range(0, len(canv_list)-1):
 	else:
 		vari = 1
 
-	canv_list[i].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed"+save_file_as)
+	canv_list[i].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][4:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed.pdf")
+	canv_list[i].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][4:]+"_"+part_list[part_check]+"_"+var_list[vari]+"_Normed.png")
 
-canv_list[-1].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][6:]+"_"+part_list[-1]+"_Pt_Normed"+save_file_as)
+canv_list[-1].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][4:]+"_"+part_list[-1]+"_Pt_Normed.pdf")
+canv_list[-1].Print(sys.argv[1].split("_")[0]+"_"+info_list[1][5:]+"_"+info_list[0][4:]+"_"+part_list[-1]+"_Pt_Normed.png")

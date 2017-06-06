@@ -10,7 +10,7 @@ import math as mt
 if __name__ == '__main__':
 	# find events in file
 	my_lhe_file = LHEFile(sys.argv[1])
-	my_lhe_file.set_max(10000)
+	my_lhe_file.set_max(-1)
 
 	events_read_in = my_lhe_file.read_events()
 	t = rt.TTree('events', 'tree with events from LHE file' )
@@ -94,13 +94,19 @@ if __name__ == '__main__':
 				count = i
 	
 		k = dm_list[0]+dm_list[1]
-		mIdx[count+1] = 10000
+		PdgID[count+1] = 10000
 		Px[count+1] = k.Px()
 		Py[count+1] = k.Py()
 		Pz[count+1] = k.Pz()
 		Pt[count+1] = k.Pt()
 		t.Fill()
+	
+	try:	
+		if isinstance(sys.argv[2], str):
+			sys.argv[1] = sys.argv[2]
+	except:
+		sys.argv[1] = sys.argv[1].split("_")[0][2:]+"_"+str(int(m_phi[0]))+"_"+str(int(m_chi[0]))+"_"+str(round(g_q[0]*10)/10.).replace(".", "p")+".root"
 
-	fout =  rt.TFile(sys.argv[2],"RECREATE") 
+	fout =  rt.TFile(sys.argv[1],"RECREATE") 
 	t.Write()
 	f.Write()
